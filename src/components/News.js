@@ -51,7 +51,7 @@ const News = (props) => {
     const nextPage = page + 1;
     setPage(nextPage);
 
-    const url = `https://newsapi.org/v2/top-headlines?category=${props.category}&apiKey=${props.apiKey}&page=${nextPage}&pageSize=${props.pageSize}`;
+    const url = `/api/news?category=${props.category}&page=${page}&pageSize=${props.pageSize}`;
 
     try {
       let data = await fetch(url);
