@@ -11,8 +11,9 @@ const News = (props) => {
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
 
-  const capitalizeFirstLetter = (string) =>
-    string.charAt(0).toUpperCase() + string.slice(1);
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
   const updateNews = async () => {
     props.setProgress(10);
@@ -25,9 +26,9 @@ const News = (props) => {
       props.setProgress(70);
 
       if (parsedData.articles) {
-        const trimmedArticles = parsedData.articles.slice(1); // Optional
+        const trimmedArticles = parsedData.articles.slice(1); // Optional: remove first article
         setArticles(trimmedArticles);
-        setTotalResults((parsedData.totalResults || 0) - 1);
+        setTotalResults((parsedData.totalResults || 0) - 1); // Adjust total if trimmed
       } else {
         setArticles([]);
         setTotalResults(0);
