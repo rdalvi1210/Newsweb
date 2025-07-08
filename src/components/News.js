@@ -1,5 +1,6 @@
+import axios from "axios";
 import PropTypes from "prop-types";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import NewsItem from "./NewsItem";
 import Spinner from "./Spinner";
@@ -10,24 +11,23 @@ const News = (props) => {
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
+  const capitalizeFirstLetter = (string) =>
+    string.charAt(0).toUpperCase() + string.slice(1);
 
   const updateNews = async () => {
     props.setProgress(10);
-    const url = `https://newsapi.org/v2/top-headlines?category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
+    const url = `http://localhost:8000/api/news?category=${props.category}&page=1&pageSize=${props.pageSize}`;
 
     setLoading(true);
     try {
-      let data = await fetch(url);
-      let parsedData = await data.json();
+      const response = await axios.get(url);
+      const parsedData = response.data;
       props.setProgress(70);
 
       if (parsedData.articles) {
-        const trimmedArticles = parsedData.articles.slice(1); // Remove first article
+        const trimmedArticles = parsedData.articles.slice(1); // Optional
         setArticles(trimmedArticles);
-        setTotalResults((parsedData.totalResults || 0) - 1); // Adjust totalResults
+        setTotalResults((parsedData.totalResults || 0) - 1);
       } else {
         setArticles([]);
         setTotalResults(0);
@@ -51,18 +51,18 @@ const News = (props) => {
     const nextPage = page + 1;
     setPage(nextPage);
 
-    const url = `https://newsapi.org/v2/top-headlines?category=${props.category}&apiKey=${props.apiKey}&page=${nextPage}&pageSize=${props.pageSize}`;
+    const url = `http://localhost:8000/api/news?category=${props.category}&page=${nextPage}&pageSize=${props.pageSize}`;
 
     try {
-      let data = await fetch(url);
-      let parsedData = await data.json();
+      const response = await axios.get(url);
+      const parsedData = response.data;
 
       if (parsedData.articles) {
         setArticles((prevArticles) => [
           ...prevArticles,
           ...parsedData.articles,
         ]);
-        setTotalResults(parsedData.totalResults || 0); // No need to subtract here
+        setTotalResults(parsedData.totalResults || 0);
       }
     } catch (error) {
       console.error("Error fetching more news:", error);
@@ -77,7 +77,9 @@ const News = (props) => {
       >
         NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines
       </h1>
+
       {loading && <Spinner />}
+
       <InfiniteScroll
         dataLength={articles.length}
         next={fetchMoreData}
@@ -107,11 +109,14 @@ const News = (props) => {
 };
 
 News.propTypes = {
-  country: PropTypes.string,
   pageSize: PropTypes.number,
   category: PropTypes.string,
-  apiKey: PropTypes.string.isRequired,
   setProgress: PropTypes.func.isRequired,
+};
+
+News.defaultProps = {
+  pageSize: 8,
+  category: "general",
 };
 
 export default News;
