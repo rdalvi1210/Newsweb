@@ -26,9 +26,9 @@ const News = (props) => {
       props.setProgress(70);
 
       if (parsedData.articles) {
-        const trimmedArticles = parsedData.articles.slice(1); // Optional: remove first article
+        const trimmedArticles = parsedData.articles.slice(1);
         setArticles(trimmedArticles);
-        setTotalResults((parsedData.totalResults || 0) - 1); // Adjust total if trimmed
+        setTotalResults((parsedData.totalResults || 0) - 1);
       } else {
         setArticles([]);
         setTotalResults(0);
