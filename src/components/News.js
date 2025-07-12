@@ -1,70 +1,60 @@
 import axios from "axios";
-import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import NewsItem from "./NewsItem";
 import Spinner from "./Spinner";
 
-const News = (props) => {
+const News = ({ category = "general", pageSize = 8, setProgress }) => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
+  const capitalizeFirstLetter = (str) =>
+    str.charAt(0).toUpperCase() + str.slice(1);
 
   const updateNews = async () => {
-    props.setProgress(10);
-    const url = `http://localhost:8000/api/news?category=${props.category}&page=1&pageSize=${props.pageSize}`;
-
+    setProgress(10);
     setLoading(true);
-    try {
-      const response = await axios.get(url);
-      const parsedData = response.data;
-      props.setProgress(70);
 
-      if (parsedData.articles) {
-        const trimmedArticles = parsedData.articles.slice(1);
-        setArticles(trimmedArticles);
-        setTotalResults((parsedData.totalResults || 0) - 1);
-      } else {
-        setArticles([]);
-        setTotalResults(0);
-      }
+    try {
+      const { data } = await axios.get(
+        `http://localhost:8000/api/news?category=${category}&page=1&pageSize=${pageSize}`
+      );
+      setProgress(70);
+
+      const articlesData = data.articles || [];
+      const trimmedArticles = articlesData.slice(1);
+
+      setArticles(trimmedArticles);
+      setTotalResults((data.totalResults || 0) - 1);
     } catch (error) {
       console.error("Error fetching news:", error);
       setArticles([]);
       setTotalResults(0);
     }
+
     setLoading(false);
-    props.setProgress(100);
+    setProgress(100);
   };
 
   useEffect(() => {
-    document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
+    document.title = `${capitalizeFirstLetter(category)} - NewsMonkey`;
     updateNews();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMoreData = async () => {
     const nextPage = page + 1;
     setPage(nextPage);
 
-    const url = `http://localhost:8000/api/news?category=${props.category}&page=${nextPage}&pageSize=${props.pageSize}`;
-
     try {
-      const response = await axios.get(url);
-      const parsedData = response.data;
+      const { data } = await axios.get(
+        `http://localhost:8000/api/news?category=${category}&page=${nextPage}&pageSize=${pageSize}`
+      );
 
-      if (parsedData.articles) {
-        setArticles((prevArticles) => [
-          ...prevArticles,
-          ...parsedData.articles,
-        ]);
-        setTotalResults(parsedData.totalResults || 0);
-      }
+      setArticles((prev) => [...prev, ...(data.articles || [])]);
+      setTotalResults(data.totalResults || 0);
     } catch (error) {
       console.error("Error fetching more news:", error);
     }
@@ -74,9 +64,9 @@ const News = (props) => {
     <>
       <h1
         className="text-center"
-        style={{ margin: "35px 0px", marginTop: "90px" }}
+        style={{ margin: "35px 0", marginTop: "90px" }}
       >
-        NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines
+        NewsMonkey - Top {capitalizeFirstLetter(category)} Headlines
       </h1>
 
       {loading && <Spinner />}
@@ -89,16 +79,16 @@ const News = (props) => {
       >
         <div className="container">
           <div className="row">
-            {articles.map((element, index) => (
+            {articles.map((item, index) => (
               <div className="col-md-4" key={index}>
                 <NewsItem
-                  title={element.title || ""}
-                  description={element.description || ""}
-                  imageUrl={element.urlToImage}
-                  newsUrl={element.url}
-                  author={element.author || "Unknown"}
-                  date={element.publishedAt}
-                  source={element.source?.name || "Unknown"}
+                  title={item.title || ""}
+                  description={item.description || ""}
+                  imageUrl={item.urlToImage}
+                  newsUrl={item.url}
+                  author={item.author || "Unknown"}
+                  date={item.publishedAt}
+                  source={item.source?.name || "Unknown"}
                 />
               </div>
             ))}
@@ -109,15 +99,5 @@ const News = (props) => {
   );
 };
 
-News.propTypes = {
-  pageSize: PropTypes.number,
-  category: PropTypes.string,
-  setProgress: PropTypes.func.isRequired,
-};
-
-News.defaultProps = {
-  pageSize: 8,
-  category: "general",
-};
-
 export default News;
+ 
